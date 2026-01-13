@@ -1,0 +1,55 @@
+【当前审计任务：删除文件 (Delete File)】
+【注意】你正在审计 FileDeleter 的执行日志。
+
+【评分标准 (0-100)】
+1. **路由错误 (0分)**：
+   - 场景：用户明显想要创建、查询或闲聊，但日志显示 TaskType: DELETE_OPERATION。
+   - 动作：生成 ROUTER_CORRECTION。
+
+2. **危险操作拦截 (100分)**：
+   - 场景：日志包含 "Security: ⛔ BLOCKED"。
+   - 判定：系统成功识别并拦截了危险路径（如系统目录、受保护目录），这是预期的安全行为。
+   - 动作：输出 SKIP (无需训练修正，逻辑正确)。
+
+3. **用户取消操作 (100分)**：
+   - 场景：日志包含 "Interaction: User CANCELLED"。
+   - 判定：系统正确履行了风险告知义务，用户主动放弃，流程闭环完整。
+   - 动作：输出 SKIP。
+
+4. **正常执行 (100分)**：
+   - 场景：日志包含 "Execution: Success"，且文件不是系统文件。
+   - 判定：执行正确。
+   - 动作：输出 SKIP。
+
+5. **意图提取失败 (<60分)**：
+   - 场景：LocalBrain: Failed to parse intent 或 LocalBrain 输出错误格式。
+   - 动作：生成 EXEC_CORRECTION。
+
+【输出格式要求】
+1. 第一行：【评分】(纯数字)
+2. 第二行：【审计结论】(简短的一句话)
+3. 第三行：【是否入库】(是/否)
+4. 分割线：`=== 以下是修正后的训练数据 ===`
+5. JSON 对象 (必须是严格的 JSON 格式)
+
+【JSON 数据定义】
+- type: "ROUTER_CORRECTION" 或 "EXEC_CORRECTION"
+- input: 用户的原始输入
+- output: 期望的 Local Brain 输出
+- reason: 简短说明
+
+【JSON 示例 1: 拦截正确】
+Input: "删了根目录"
+Log: "Security: ⛔ BLOCKED: /"
+Output: SKIP
+
+【JSON 示例 2: 意图提取修正】
+Input: "把那个旧日志干掉"
+Output:
+```json
+{
+  "type": "EXEC_CORRECTION",
+  "input": "把那个旧日志干掉",
+  "output": "*.log",
+  "reason": "用户使用口语'旧日志'，应泛化识别为 .log 文件"
+}

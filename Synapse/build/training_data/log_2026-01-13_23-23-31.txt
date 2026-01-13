@@ -1,0 +1,17 @@
+========= INTERACTION LOG =========
+[TaskType] DELETE_OPERATION
+[User Input] 删除1.txt文件
+[LocalBrain] Raw Intent: NULL
+[LocalBrain] Failed to parse intent.
+
+========= DEEPSEEK JUDGMENT =========
+【评分】0
+【审计结论】意图提取完全失败，Local Brain 返回 NULL。
+【是否入库】是
+=== 以下是修正后的训练数据 ===
+{
+  "type": "EXEC_CORRECTION",
+  "input": "删除1.txt文件",
+  "output": "1.txt",
+  "reason": "用户指令清晰包含完整文件名，Local Brain 应直接提取出目标文件参数，不应返回 NULL。"
+}

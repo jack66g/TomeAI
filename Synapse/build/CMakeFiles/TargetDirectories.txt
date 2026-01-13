@@ -1,0 +1,3 @@
+/home/ubuntu/桌面/Synapse/build/CMakeFiles/synapse.dir
+/home/ubuntu/桌面/Synapse/build/CMakeFiles/edit_cache.dir
+/home/ubuntu/桌面/Synapse/build/CMakeFiles/rebuild_cache.dir

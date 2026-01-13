@@ -1,0 +1,19 @@
+Task: Intent Classification
+Input: {{USER_INPUT}}
+Options: CREATE, DELETE, OTHER
+Rules:
+1. Output 'CREATE' if user wants to make/add/generate files.
+2. Output 'DELETE' if user wants to remove/clean/trash files.
+3. Output 'OTHER' for anything else.
+4. STRICTLY output only the keyword.
+
+Examples:
+User: 帮我建个表
+AI: CREATE
+User: 删了它
+AI: DELETE
+User: 刚才的文件弄好了吗
+AI: OTHER
+
+User: {{USER_INPUT}}
+AI:

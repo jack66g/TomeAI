@@ -1,0 +1,145 @@
+/* 简单的深色主题 */
+:root {
+  --bg-color: #1e1e2e;
+  --text-color: #cdd6f4;
+  --accent-color: #89b4fa;
+  --user-msg-bg: #313244;
+  --ai-msg-bg: #45475a;
+  --thinking-color: #a6adc8;
+  --error-color: #f38ba8;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overflow: hidden; /* 禁止整个窗口滚动 */
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* 左侧头像区 */
+.avatar-section {
+  width: 180px;
+  background-color: #181825;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-right: 1px solid #313244;
+}
+
+.avatar-img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent-color);
+  /* 可以加个简单的呼吸动画 */
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0% { box-shadow: 0 0 5px var(--accent-color); }
+  50% { box-shadow: 0 0 15px var(--accent-color); }
+  100% { box-shadow: 0 0 5px var(--accent-color); }
+}
+
+.status-text {
+  margin-top: 15px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* 右侧聊天区 */
+.chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto; /* 允许内部滚动 */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-bottom: 20px;
+}
+
+/* 消息气泡 */
+.message {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  line-height: 1.4;
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: var(--user-msg-bg);
+  border-bottom-right-radius: 2px;
+}
+
+.ai-message {
+  align-self: flex-start;
+  background-color: var(--ai-msg-bg);
+  border-bottom-left-radius: 2px;
+}
+
+/* 思考过程样式 */
+.thinking-process {
+  align-self: flex-start;
+  color: var(--thinking-color);
+  font-size: 13px;
+  font-style: italic;
+  padding: 5px 10px;
+  border-left: 2px solid var(--thinking-color);
+  margin-left: 5px;
+}
+
+.error-message {
+  color: var(--error-color);
+  border-left: 2px solid var(--error-color);
+}
+
+/* 输入区域 */
+.input-area {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #313244;
+}
+
+#user-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: #313244;
+  color: var(--text-color);
+  outline: none;
+}
+
+#send-btn {
+  padding: 0 25px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--accent-color);
+  color: #181825;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#send-btn:hover {
+  background-color: #74a0e8;
+}

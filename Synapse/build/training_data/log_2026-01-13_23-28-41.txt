@@ -1,0 +1,22 @@
+========= INTERACTION LOG =========
+[TaskType] DELETE_OPERATION
+[User Input] 删除1.txt
+[LocalBrain] Raw Intent: ```
+NULL
+```
+[Fallback] Triggering Regex Extraction
+[LocalBrain] Failed to parse intent (AI & Regex).
+
+========= DEEPSEEK JUDGMENT =========
+【评分】0
+【审计结论】意图提取完全失败，Local Brain 返回 NULL 且正则回退也失败。
+【是否入库】是
+=== 以下是修正后的训练数据 ===
+```json
+{
+  "type": "EXEC_CORRECTION",
+  "input": "删除1.txt",
+  "output": "1.txt",
+  "reason": "用户指令明确包含文件名，应直接提取并执行删除操作，不应返回 NULL。"
+}
+```

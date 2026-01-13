@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synapse AI OS</title>
+  <style>
+    /* === 1. 基础样式 === */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* === 2. 顶部状态栏 === */
+    #status-bar {
+      padding: 10px 20px;
+      background-color: #252526;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #avatar {
+      width: 12px;
+      height: 12px;
+      background-color: #00ff88;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #00ff88;
+      animation: pulse 3s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    #status-text {
+      font-size: 12px;
+      color: #888;
+    }
+
+    /* === 3. 聊天记录区域 === */
+    #chat-history {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    /* 滚动条美化 */
+    #chat-history::-webkit-scrollbar { width: 8px; }
+    #chat-history::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+    /* 消息气泡样式 */
+    .message {
+      max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 12px;
+      line-height: 1.5;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+    .user-message {
+      align-self: flex-end;
+      background-color: #007acc;
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+    .ai-message {
+      align-self: flex-start;
+      background-color: #333;
+      color: #ddd;
+      border-bottom-left-radius: 2px;
+    }
+    .thinking-process {
+      align-self: flex-start;
+      font-size: 12px;
+      color: #888;
+      font-style: italic;
+      margin-left: 5px;
+    }
+
+    /* === 4. 底部输入区 (关键部分) === */
+    #input-area {
+      padding: 20px;
+      background-color: #252526;
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid #333;
+    }
+    #user-input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background-color: #1e1e1e;
+      color: white;
+      outline: none;
+      font-size: 14px;
+    }
+    #user-input:focus {
+      border-color: #007acc;
+    }
+    
+    /* ✨ 发送按钮样式 ✨ */
+    #send-btn {
+      padding: 0 20px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    #send-btn:hover {
+      background-color: #005f9e;
+    }
+    #send-btn:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="status-bar">
+    <div id="avatar"></div>
+    <div id="status-text">初始化中...</div>
+  </div>
+
+  <div id="chat-history">
+    <div class="message ai-message">你好！我是 Synapse 智能助手。<br>输入 "创建文件" 即可开始。</div>
+  </div>
+
+  <div id="input-area">
+    <input type="text" id="user-input" placeholder="输入指令 (支持回车默认)..." autofocus />
+    <button id="send-btn">发送</button>
+  </div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core;
+    const { Command } = window.__TAURI__.shell;
+
+    const chatHistory = document.getElementById('chat-history');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const statusText = document.getElementById('status-text');
+    const avatar = document.getElementById('avatar');
+
+    let backendProcess = null;
+
+    // === 1. 启动后端 ===
+    async function startBackend() {
+      console.log('正在连接神经中枢...');
+      const cmd = Command.sidecar('synapse');
+
+      cmd.stdout.on('data', (line) => {
+        const cleanLine = line.trim();
+        if (!cleanLine) return;
+
+        // 路由不同类型的消息
+        if (cleanLine.startsWith('[THINK]')) {
+            appendThinking(cleanLine.substring(8));
+            updateStatus("思考中...", true);
+        } else if (cleanLine.startsWith('[RESULT]')) {
+            appendAIMessage(cleanLine.substring(9));
+            updateStatus("就绪", false);
+        } else if (cleanLine.startsWith('[ERROR]')) {
+            appendError(cleanLine.substring(8));
+            updateStatus("就绪", false);
+        } else {
+            // ✅ 处理普通提示 (如：请问文件名？)
+            appendAIMessage(cleanLine);
+            updateStatus("等待输入...", false);
+        }
+      });
+
+      cmd.stderr.on('data', line => console.error(`Backend ERR: ${line}`));
+      
+      cmd.on('close', () => {
+          appendError("连接已断开");
+          updateStatus("离线", false);
+          avatar.style.backgroundColor = '#ff4444';
+      });
+
+      try {
+          backendProcess = await cmd.spawn();
+          console.log('连接成功, PID:', backendProcess.pid);
+          updateStatus("就绪", false);
+      } catch (e) {
+          appendError("启动失败: " + e);
+          updateStatus("错误", false);
+      }
+    }
+
+    // === 2. 发送消息 (支持按钮和回车) ===
+    async function sendMessage() {
+      const rawText = userInput.value;
+      
+      // ✅ 允许空回车：如果是空的，发一个空格过去触发默认值
+      const textToSend = rawText.trim() === "" ? " " : rawText.trim();
+
+      if (!backendProcess) return;
+
+      // UI 显示
+      if (rawText.trim() === "") {
+          appendUserMessage("↩︎ (默认)");
+      } else {
+          appendUserMessage(rawText.trim());
+      }
+      
+      userInput.value = '';
+
+      try {
+          await backendProcess.write(textToSend + '\n');
+          updateStatus("发送中...", true);
+      } catch (e) {
+          appendError("发送失败: " + e);
+      }
+    }
+
+    // === 3. UI 辅助函数 ===
+    function appendUserMessage(text) {
+      const d = document.createElement('div');
+      d.className = 'message user-message';
+      d.textContent = text;
+      chatHistory.appendChild(d);
+      scrollToBottom();
+    }
+
+    function appendAIMessage(text) {
+      const d = document.createElement('div');
+      d.className = 'message ai-message';
+      d.innerHTML = text.replace(/\n/g, '<br>');
+      chatHistory.appendChild(d);
+      scrollToBottom();
+    }
+
+    function appendThinking(text) {
+        const d = document.createElement('div');
+        d.className = 'thinking-process';
+        d.textContent = '🧠 ' + text;
+        chatHistory.appendChild(d);
+        scrollToBottom();
+    }
+
+    function appendError(text) {
+        const d = document.createElement('div');
+        d.className = 'thinking-process';
+        d.style.color = '#ff6b6b';
+        d.textContent = '⚠️ ' + text;
+        chatHistory.appendChild(d);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    function updateStatus(text, isBusy) {
+        statusText.textContent = text;
+        if (isBusy) avatar.style.animationDuration = '0.5s';
+        else avatar.style.animationDuration = '3s';
+    }
+
+    // === 4. 事件绑定 (让按钮和回车一起用) ===
+    sendBtn.addEventListener('click', sendMessage); // 绑定点击
+    userInput.addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') sendMessage();       // 绑定回车
+    });
+
+    // 启动！
+    window.addEventListener('DOMContentLoaded', startBackend);
+  </script>
+</body>
+</html>
