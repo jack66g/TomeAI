@@ -1,3 +1,4 @@
+<img width="2944" height="1440" alt="Image" src="https://github.com/user-attachments/assets/84118325-bc28-414b-992c-77d851ac0317" />
 Synapse: Self-Evolving Linux AI Agent Synapse is an experimental C++ Linux Agent designed to demonstrate a Real-time Knowledge Distillation architecture. It solves the "stupid local model" problem by allowing a lightweight local model (SLM) to learn from a high-intelligence cloud model (DeepSeek) through continuous interaction and error correction.
 
 ⚠️ Current Status: This is a Proof of Concept. It currently supports CREATE and DELETE operations only and contains bugs. However, these bugs are intentional features—they generate the "failure cases" needed for the system to learn.
